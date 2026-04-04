@@ -10,19 +10,21 @@ public class TrafficLightAgent extends Agent {
     private String currentState = "RED";
     private Set<AID> waitingCars = new HashSet<>();
     private String partnerName;
-    private static TrafficGUI gui = new TrafficGUI();
 
-    // ✅ Méthode déplacée ici, au niveau de l'Agent
+    // GUI partagé entre tous les agents, initialisé une seule fois
+    public static TrafficGUI gui = null;
+
     private void update(String s) {
         currentState = s;
-        gui.update(getLocalName(), s, waitingCars.size());
+        if (gui != null) {
+            gui.updateLights(getLocalName(), s);   // mise à jour feux
+        }
     }
 
     private void forceGreen(String reason) {
         System.out.println("🚨 [ALERTE] " + reason);
         update("GREEN");
         try {
-            // On laisse l'ambulance passer pendant 4 secondes
             Thread.sleep(4000);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -31,13 +33,17 @@ public class TrafficLightAgent extends Agent {
         System.out.println("🚦 [SYSTEM] Reprise du flux normal.");
     }
 
-
     protected void setup() {
+        // On crée le GUI une seule fois, au premier agent qui démarre
+        if (gui == null) {
+            gui = new TrafficGUI();
+        }
+
         if (getArguments() != null && getArguments().length > 0) {
             partnerName = (String) getArguments()[0];
         } else {
             System.err.println("❌ Erreur : " + getLocalName() + " n'a pas de partenaire !");
-            doDelete(); // On arrête l'agent proprement s'il n'est pas configuré
+            doDelete();
             return;
         }
         update("RED");
@@ -57,13 +63,11 @@ public class TrafficLightAgent extends Agent {
 
                     if (msg.getPerformative() == ACLMessage.QUERY_IF) {
                         ACLMessage reply = msg.createReply();
-                        // Je donne la permission si je suis au ROUGE
                         reply.setPerformative(currentState.equals("RED") ? ACLMessage.CONFIRM : ACLMessage.DISCONFIRM);
                         reply.setContent("PERMISSION_REPLY");
                         send(reply);
                     }
                 } else {
-                    // Intelligence : On ne demande la permission QUE s'il y a des voitures et qu'on est au ROUGE
                     if (!waitingCars.isEmpty() && currentState.equals("RED")) {
                         checkPartnerAndGo();
                     }
@@ -81,7 +85,7 @@ public class TrafficLightAgent extends Agent {
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 ACLMessage msg = receive(
-                        jade.lang.acl.MessageTemplate.MatchPerformative(ACLMessage.CONFIRM)
+                    jade.lang.acl.MessageTemplate.MatchPerformative(ACLMessage.CONFIRM)
                 );
                 if (msg != null) {
                     executeGreenCycle();
@@ -89,11 +93,11 @@ public class TrafficLightAgent extends Agent {
             }
 
             private void executeGreenCycle() {
-                update("GREEN"); // ✅ Fonctionne maintenant
+                update("GREEN");
                 try { Thread.sleep(3000); } catch (Exception e) {}
                 int count = waitingCars.size();
                 waitingCars.clear();
-                update("RED");  // ✅ Fonctionne maintenant
+                update("RED");
 
                 ACLMessage stat = new ACLMessage(ACLMessage.INFORM);
                 stat.addReceiver(new AID("Superviseur", AID.ISLOCALNAME));

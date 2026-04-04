@@ -13,12 +13,19 @@ public class TrafficGeneratorAgent extends Agent {
                 try {
                     String axis = random.nextBoolean() ? "Axe_A" : "Axe_B";
                     String id = "V" + System.currentTimeMillis() % 10000;
-                    // On passe le nom de l'axe en argument à la voiture
+
                     if (random.nextInt(10) < 9) {
                         getContainerController().createNewAgent("V"+id, "ma.fstt.sma.CarAgent", new Object[]{axis}).start();
+                        // Mise à jour de l'interface graphique après création d'une voiture
+                        if (TrafficLightAgent.gui != null) {
+                            TrafficLightAgent.gui.addCar(axis);
+                        }
                     } else {
-                        // On envoie aussi l'axe à l'ambulance !
                         getContainerController().createNewAgent("Amb"+id, "ma.fstt.sma.AmbulanceAgent", new Object[]{axis}).start();
+                        // Optionnel : si l'ambulance doit aussi apparaître dans le GUI
+                        // if (TrafficLightAgent.gui != null) {
+                        //     TrafficLightAgent.gui.addCar(axis);
+                        // }
                     }
                 } catch (Exception e) { e.printStackTrace(); }
             }
