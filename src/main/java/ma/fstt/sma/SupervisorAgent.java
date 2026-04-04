@@ -30,7 +30,7 @@ public class SupervisorAgent extends Agent {
                             String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                             out.println(timestamp + ";" + totalCars + ";" + String.format("%.2f", flow));
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            System.err.println("❌ [ERREUR] Impossible d'écrire les statistiques dans le fichier CSV : " + e.getMessage());
                         }
                     }
                 } else block();

@@ -1,8 +1,7 @@
 package ma.fstt.sma;
+
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.wrapper.AgentController;
-import jade.wrapper.ContainerController;
 import java.util.Random;
 
 public class TrafficGeneratorAgent extends Agent {
