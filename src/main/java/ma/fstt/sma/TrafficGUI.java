@@ -30,16 +30,18 @@ public class TrafficGUI extends JFrame {
         int x, y;
         String axis;
         boolean moving = true;
+        boolean isAmbulance;
 
-        VisualCar(String axis) {
+        VisualCar(String axis, boolean isAmbulance) {
             this.axis = axis;
+            this.isAmbulance = isAmbulance;
             if (axis.equals("Axe_A")) { x = 285; y = 0; } // Nord -> Sud
             else { x = 0; y = 285; } // Ouest -> Est
         }
     }
 
-    public void addCar(String axis) {
-        cars.add(new VisualCar(axis));
+    public void addCar(String axis, boolean isAmbulance) {
+        cars.add(new VisualCar(axis, isAmbulance));
     }
 
     public void updateLights(String axis, String state) {
@@ -91,8 +93,12 @@ public class TrafficGUI extends JFrame {
         drawLight(g, 360, 360, stateB); // Feu Axe B
 
         // 3. Dessin des Voitures
-        g.setColor(Color.BLUE);
         for (VisualCar car : cars) {
+            if (car.isAmbulance) {
+                g.setColor(Color.RED);
+            } else {
+                g.setColor(Color.BLUE);
+            }
             g.fillRect(car.x, car.y, 30, 20);
         }
     }

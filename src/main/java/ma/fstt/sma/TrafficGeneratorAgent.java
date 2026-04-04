@@ -18,14 +18,14 @@ public class TrafficGeneratorAgent extends Agent {
                         getContainerController().createNewAgent("V"+id, "ma.fstt.sma.CarAgent", new Object[]{axis}).start();
                         // Mise à jour de l'interface graphique après création d'une voiture
                         if (TrafficLightAgent.gui != null) {
-                            TrafficLightAgent.gui.addCar(axis);
+                            TrafficLightAgent.gui.addCar(axis, false);
                         }
                     } else {
                         getContainerController().createNewAgent("Amb"+id, "ma.fstt.sma.AmbulanceAgent", new Object[]{axis}).start();
-                        // Optionnel : si l'ambulance doit aussi apparaître dans le GUI
-                        // if (TrafficLightAgent.gui != null) {
-                        //     TrafficLightAgent.gui.addCar(axis);
-                        // }
+                        // Mise à jour de l'interface graphique après création d'une ambulance
+                        if (TrafficLightAgent.gui != null) {
+                            TrafficLightAgent.gui.addCar(axis, true);
+                        }
                     }
                 } catch (Exception e) { e.printStackTrace(); }
             }

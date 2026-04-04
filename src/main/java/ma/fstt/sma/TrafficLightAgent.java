@@ -35,8 +35,10 @@ public class TrafficLightAgent extends Agent {
 
     protected void setup() {
         // On crée le GUI une seule fois, au premier agent qui démarre
-        if (gui == null) {
-            gui = new TrafficGUI();
+        synchronized (TrafficLightAgent.class) {
+            if (gui == null) {
+                gui = new TrafficGUI();
+            }
         }
 
         if (getArguments() != null && getArguments().length > 0) {
