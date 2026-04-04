@@ -10,6 +10,10 @@ public class TrafficGUI extends JFrame {
     // Liste thread-safe pour éviter les erreurs pendant l'animation
     private List<VisualCar> cars = new CopyOnWriteArrayList<>();
 
+    // On-Screen Dashboard data
+    private int totalVehicles = 0;
+    private double avgFlow = 0.0;
+
     public TrafficGUI() {
         setTitle("STI - Simulateur de Carrefour Intelligent");
         setSize(600, 600);
@@ -49,6 +53,12 @@ public class TrafficGUI extends JFrame {
         else stateB = state;
     }
 
+    public synchronized void updateKPIs(int total, double flow) {
+        this.totalVehicles = total;
+        this.avgFlow = flow;
+        repaint();
+    }
+
     private void moveCars() {
         for (VisualCar car : cars) {
             if (car.axis.equals("Axe_A")) {
@@ -79,6 +89,10 @@ public class TrafficGUI extends JFrame {
     }
 
     public void draw(Graphics g) {
+        // City Background (Dark Green)
+        g.setColor(new Color(34, 139, 34)); // Forest Green
+        g.fillRect(0, 0, getWidth(), getHeight());
+
         // 1. Dessin des routes
         g.setColor(Color.GRAY);
         g.fillRect(0, 250, 600, 100); // Route Horizontale
@@ -88,6 +102,24 @@ public class TrafficGUI extends JFrame {
         g.drawLine(0, 300, 600, 300);
         g.drawLine(300, 0, 300, 600);
 
+        // Zebra Crossings (White stripes just before stop lines)
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke(4, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{10.0f}, 0.0f));
+        // North entry
+        g2d.drawLine(250, 230, 350, 230);
+        g2d.drawLine(250, 240, 350, 240);
+        // South entry
+        g2d.drawLine(250, 360, 350, 360);
+        g2d.drawLine(250, 370, 350, 370);
+        // West entry
+        g2d.drawLine(230, 250, 230, 350);
+        g2d.drawLine(240, 250, 240, 350);
+        // East entry
+        g2d.drawLine(360, 250, 360, 350);
+        g2d.drawLine(370, 250, 370, 350);
+        g2d.setStroke(new BasicStroke(1)); // Reset stroke
+
         // 2. Dessin des Feux
         drawLight(g, 210, 180, stateA); // Feu Axe A
         drawLight(g, 360, 360, stateB); // Feu Axe B
@@ -95,22 +127,49 @@ public class TrafficGUI extends JFrame {
         // 3. Dessin des Voitures
         for (VisualCar car : cars) {
             if (car.isAmbulance) {
-                g.setColor(Color.RED);
+                g.setColor(new Color(220, 20, 60)); // Crimson Red
             } else {
-                g.setColor(Color.BLUE);
+                g.setColor(new Color(30, 144, 255)); // Dodger Blue
             }
-            g.fillRect(car.x, car.y, 30, 20);
+            
+            if (car.axis.equals("Axe_A")) {
+                // Vertical car, size 20x30
+                g.fillRoundRect(car.x + 5, car.y, 20, 30, 10, 10); // +5 to center in lane
+                // Headlights
+                g.setColor(Color.YELLOW);
+                g.fillOval(car.x + 7, car.y + 24, 4, 4);
+                g.fillOval(car.x + 19, car.y + 24, 4, 4);
+            } else {
+                // Horizontal car, size 30x20
+                g.fillRoundRect(car.x, car.y + 5, 30, 20, 10, 10); // +5 to center in lane
+                // Headlights
+                g.setColor(Color.YELLOW);
+                g.fillOval(car.x + 24, car.y + 7, 4, 4);
+                g.fillOval(car.x + 24, car.y + 19, 4, 4);
+            }
         }
+
+        // 4. On-Screen Dashboard (Overlay)
+        g2d.setColor(new Color(0, 0, 0, 180)); // Semi-transparent black
+        g2d.fillRoundRect(10, 35, 200, 80, 15, 15);
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
+        g2d.drawString("SYSTEM STATUS: ACTIVE", 20, 60);
+        g2d.drawString("TOTAL VEHICLES: " + totalVehicles, 20, 80);
+        g2d.drawString(String.format("AVG FLOW: %.2f v/s", avgFlow), 20, 100);
     }
 
     private void drawLight(Graphics g, int x, int y, String state) {
-        g.setColor(Color.BLACK);
+        g.setColor(Color.DARK_GRAY); // Metallic look
         g.fillRect(x, y, 30, 70);
-        g.setColor(state.equals("RED") ? Color.RED : Color.DARK_GRAY);
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, 30, 70);
+
+        g.setColor(state.equals("RED") ? Color.RED : Color.BLACK);
         g.fillOval(x+5, y+5, 20, 20);
-        g.setColor(state.equals("YELLOW") ? Color.YELLOW : Color.DARK_GRAY);
+        g.setColor(state.equals("YELLOW") ? Color.YELLOW : Color.BLACK);
         g.fillOval(x+5, y+27, 20, 20);
-        g.setColor(state.equals("GREEN") ? Color.GREEN : Color.DARK_GRAY);
+        g.setColor(state.equals("GREEN") ? Color.GREEN : Color.BLACK);
         g.fillOval(x+5, y+49, 20, 20);
     }
 }
