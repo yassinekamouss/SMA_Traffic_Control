@@ -1,4 +1,5 @@
 package ma.fstt.sma;
+
 import jade.core.Agent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
@@ -17,12 +18,14 @@ public class TrafficLightAgent extends Agent {
     private void update(String s) {
         currentState = s;
         if (gui != null) {
-            gui.updateLights(getLocalName(), s);   // mise à jour feux
+            gui.updateLights(getLocalName(), s); // mise à jour feux
         }
     }
 
     private void forceGreen(String reason) {
         System.out.println("🚨 [ALERTE] " + reason);
+        if (gui != null)
+            gui.setEmergencyActive(true); // Freeze other cars
         update("GREEN");
         try {
             Thread.sleep(4000);
@@ -30,6 +33,8 @@ public class TrafficLightAgent extends Agent {
             e.printStackTrace();
         }
         update("RED");
+        if (gui != null)
+            gui.setEmergencyActive(false); // Resume traffic
         System.out.println("🚦 [SYSTEM] Reprise du flux normal.");
     }
 
@@ -87,16 +92,19 @@ public class TrafficLightAgent extends Agent {
         addBehaviour(new CyclicBehaviour() {
             public void action() {
                 ACLMessage msg = receive(
-                    jade.lang.acl.MessageTemplate.MatchPerformative(ACLMessage.CONFIRM)
-                );
+                        jade.lang.acl.MessageTemplate.MatchPerformative(ACLMessage.CONFIRM));
                 if (msg != null) {
                     executeGreenCycle();
-                } else block();
+                } else
+                    block();
             }
 
             private void executeGreenCycle() {
                 update("GREEN");
-                try { Thread.sleep(3000); } catch (Exception e) {}
+                try {
+                    Thread.sleep(3000);
+                } catch (Exception e) {
+                }
                 int count = waitingCars.size();
                 waitingCars.clear();
                 update("RED");

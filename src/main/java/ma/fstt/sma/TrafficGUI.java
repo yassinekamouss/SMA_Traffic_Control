@@ -9,6 +9,7 @@ public class TrafficGUI extends JFrame {
     private String stateA = "RED", stateB = "RED";
     // Liste thread-safe pour éviter les erreurs pendant l'animation
     private List<VisualCar> cars = new CopyOnWriteArrayList<>();
+    private volatile boolean emergencyActive = false;
 
     // On-Screen Dashboard data
     private int totalVehicles = 0;
@@ -19,7 +20,7 @@ public class TrafficGUI extends JFrame {
         setSize(600, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        
+
         // Timer d'animation (60 FPS pour la fluidité)
         new Timer(16, e -> {
             moveCars();
@@ -39,8 +40,14 @@ public class TrafficGUI extends JFrame {
         VisualCar(String axis, boolean isAmbulance) {
             this.axis = axis;
             this.isAmbulance = isAmbulance;
-            if (axis.equals("Axe_A")) { x = 285; y = 0; } // Nord -> Sud
-            else { x = 0; y = 285; } // Ouest -> Est
+            if (axis.equals("Axe_A")) {
+                x = 285;
+                y = 0;
+            } // Nord -> Sud
+            else {
+                x = 0;
+                y = 285;
+            } // Ouest -> Est
         }
     }
 
@@ -49,8 +56,10 @@ public class TrafficGUI extends JFrame {
     }
 
     public void updateLights(String axis, String state) {
-        if (axis.equals("Axe_A")) stateA = state;
-        else stateB = state;
+        if (axis.equals("Axe_A"))
+            stateA = state;
+        else
+            stateB = state;
     }
 
     public synchronized void updateKPIs(int total, double flow) {
@@ -59,22 +68,45 @@ public class TrafficGUI extends JFrame {
         repaint();
     }
 
+    public void setEmergencyActive(boolean active) {
+        this.emergencyActive = active;
+        if (active) {
+            System.out.println("⚠️ [GUI] Emergency mode activated: Freezing regular traffic.");
+        } else {
+            System.out.println("✅ [GUI] Emergency mode deactivated: Resuming regular traffic.");
+        }
+    }
+
     private void moveCars() {
         for (VisualCar car : cars) {
+            // Global emergency freeze logic
+            if (emergencyActive && !car.isAmbulance) {
+                car.moving = false;
+                continue; // Do not process standard movement if frozen
+            }
+
             if (car.axis.equals("Axe_A")) {
                 // Stop au feu rouge de l'Axe A
-                if (stateA.equals("RED") && car.y > 200 && car.y < 210) car.moving = false;
-                else car.moving = true;
-                
-                if (car.moving) car.y += 3;
-                if (car.y > 600) cars.remove(car); // Disparaît après le carrefour
+                if (stateA.equals("RED") && car.y > 200 && car.y < 210)
+                    car.moving = false;
+                else
+                    car.moving = true;
+
+                if (car.moving)
+                    car.y += 3;
+                if (car.y > 600)
+                    cars.remove(car); // Disparaît après le carrefour
             } else {
                 // Stop au feu rouge de l'Axe B
-                if (stateB.equals("RED") && car.x > 200 && car.x < 210) car.moving = false;
-                else car.moving = true;
+                if (stateB.equals("RED") && car.x > 200 && car.x < 210)
+                    car.moving = false;
+                else
+                    car.moving = true;
 
-                if (car.moving) car.x += 3;
-                if (car.x > 600) cars.remove(car);
+                if (car.moving)
+                    car.x += 3;
+                if (car.x > 600)
+                    cars.remove(car);
             }
         }
     }
@@ -97,7 +129,7 @@ public class TrafficGUI extends JFrame {
         g.setColor(Color.GRAY);
         g.fillRect(0, 250, 600, 100); // Route Horizontale
         g.fillRect(250, 0, 100, 600); // Route Verticale
-        
+
         g.setColor(Color.WHITE); // Lignes blanches
         g.drawLine(0, 300, 600, 300);
         g.drawLine(300, 0, 300, 600);
@@ -105,7 +137,8 @@ public class TrafficGUI extends JFrame {
         // Zebra Crossings (White stripes just before stop lines)
         Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(Color.WHITE);
-        g2d.setStroke(new BasicStroke(4, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{10.0f}, 0.0f));
+        g2d.setStroke(
+                new BasicStroke(4, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[] { 10.0f }, 0.0f));
         // North entry
         g2d.drawLine(250, 230, 350, 230);
         g2d.drawLine(250, 240, 350, 240);
@@ -131,7 +164,7 @@ public class TrafficGUI extends JFrame {
             } else {
                 g.setColor(new Color(30, 144, 255)); // Dodger Blue
             }
-            
+
             if (car.axis.equals("Axe_A")) {
                 // Vertical car, size 20x30
                 g.fillRoundRect(car.x + 5, car.y, 20, 30, 10, 10); // +5 to center in lane
@@ -166,10 +199,10 @@ public class TrafficGUI extends JFrame {
         g.drawRect(x, y, 30, 70);
 
         g.setColor(state.equals("RED") ? Color.RED : Color.BLACK);
-        g.fillOval(x+5, y+5, 20, 20);
+        g.fillOval(x + 5, y + 5, 20, 20);
         g.setColor(state.equals("YELLOW") ? Color.YELLOW : Color.BLACK);
-        g.fillOval(x+5, y+27, 20, 20);
+        g.fillOval(x + 5, y + 27, 20, 20);
         g.setColor(state.equals("GREEN") ? Color.GREEN : Color.BLACK);
-        g.fillOval(x+5, y+49, 20, 20);
+        g.fillOval(x + 5, y + 49, 20, 20);
     }
 }
