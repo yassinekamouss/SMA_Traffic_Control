@@ -14,7 +14,7 @@ public class TrafficGeneratorAgent extends Agent {
                     String axis = random.nextBoolean() ? "Axe_A" : "Axe_B";
                     String id = "V" + System.currentTimeMillis() % 10000;
 
-                    if (random.nextInt(10) < 2) {
+                    if (random.nextInt(10) < 9) {
                         getContainerController().createNewAgent("V" + id, "ma.fstt.sma.CarAgent", new Object[] { axis })
                                 .start();
                         // Mise à jour de l'interface graphique après création d'une voiture
