@@ -24,8 +24,6 @@ public class TrafficLightAgent extends Agent {
 
     private void forceGreen(String reason) {
         System.out.println("🚨 [ALERTE] " + reason);
-        if (gui != null)
-            gui.setEmergencyActive(true); // Freeze other cars
         update("GREEN");
         try {
             Thread.sleep(4000);
@@ -33,8 +31,6 @@ public class TrafficLightAgent extends Agent {
             e.printStackTrace();
         }
         update("RED");
-        if (gui != null)
-            gui.setEmergencyActive(false); // Resume traffic
         System.out.println("🚦 [SYSTEM] Reprise du flux normal.");
     }
 

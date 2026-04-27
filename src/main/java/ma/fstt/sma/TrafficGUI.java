@@ -9,7 +9,6 @@ public class TrafficGUI extends JFrame {
     private String stateA = "RED", stateB = "RED";
     // Liste thread-safe pour éviter les erreurs pendant l'animation
     private List<VisualCar> cars = new CopyOnWriteArrayList<>();
-    private volatile boolean emergencyActive = false;
 
     // On-Screen Dashboard data
     private int totalVehicles = 0;
@@ -68,23 +67,8 @@ public class TrafficGUI extends JFrame {
         repaint();
     }
 
-    public void setEmergencyActive(boolean active) {
-        this.emergencyActive = active;
-        if (active) {
-            System.out.println("⚠️ [GUI] Emergency mode activated: Freezing regular traffic.");
-        } else {
-            System.out.println("✅ [GUI] Emergency mode deactivated: Resuming regular traffic.");
-        }
-    }
-
     private void moveCars() {
         for (VisualCar car : cars) {
-            // Global emergency freeze logic
-            if (emergencyActive && !car.isAmbulance) {
-                car.moving = false;
-                continue; // Do not process standard movement if frozen
-            }
-
             if (car.axis.equals("Axe_A")) {
                 // Check for car ahead on Axe A
                 boolean carAhead = false;
