@@ -86,8 +86,17 @@ public class TrafficGUI extends JFrame {
             }
 
             if (car.axis.equals("Axe_A")) {
-                // Stop au feu rouge de l'Axe A
-                if (stateA.equals("RED") && car.y > 200 && car.y < 210)
+                // Check for car ahead on Axe A
+                boolean carAhead = false;
+                for (VisualCar other : cars) {
+                    if (other != car && other.axis.equals("Axe_A") && other.y > car.y && other.y - car.y < 45) {
+                        carAhead = true;
+                        break;
+                    }
+                }
+
+                // Stop au feu rouge de l'Axe A ou si une voiture est devant
+                if (carAhead || (stateA.equals("RED") && car.y > 200 && car.y < 210))
                     car.moving = false;
                 else
                     car.moving = true;
@@ -97,8 +106,17 @@ public class TrafficGUI extends JFrame {
                 if (car.y > 600)
                     cars.remove(car); // Disparaît après le carrefour
             } else {
-                // Stop au feu rouge de l'Axe B
-                if (stateB.equals("RED") && car.x > 200 && car.x < 210)
+                // Check for car ahead on Axe B
+                boolean carAhead = false;
+                for (VisualCar other : cars) {
+                    if (other != car && other.axis.equals("Axe_B") && other.x > car.x && other.x - car.x < 45) {
+                        carAhead = true;
+                        break;
+                    }
+                }
+
+                // Stop au feu rouge de l'Axe B ou si une voiture est devant
+                if (carAhead || (stateB.equals("RED") && car.x > 200 && car.x < 210))
                     car.moving = false;
                 else
                     car.moving = true;
